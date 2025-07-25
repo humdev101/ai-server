@@ -43,8 +43,12 @@ async def getAllAnalysis():
         documents.append(document)
     return documents
 
-async def stack_analysis_coin_analysis():
-    cursor = collection.find().sort("created_at", -1).limit(1)
+async def stack_analysis_coin_analysis(coin_symbol: str,interval: str):
+    query = {
+        "coin_symbol": coin_symbol,
+        "interval": interval
+    }
+    cursor = collection.find(query).sort("created_at", -1).limit(1)
     value = None
     async for anal in cursor:
         print(cursor)

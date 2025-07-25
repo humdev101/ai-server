@@ -6,6 +6,7 @@ from ..helpers.prompts import generalCryptoAnalysisFull,saveAnalysis,getCoinCryp
 from datetime import datetime, timezone, timedelta
 from .analysis import stack_analysis
 from ..service.coinAnalysisService import stack_analysis_coin_analysis,addAnalysis
+from ..models.coinAnalysisModel import CoinAnalysisBase
 
 router = APIRouter(
     prefix="/ai"
@@ -206,7 +207,7 @@ async def getConversationalData(body:LLMBody,response:Response):
         if not curr_analysis:
             print("No analysis found")
             resp =  generalCryptoAnalysisFull(body.llmModel)
-            coin_analysis_obj = CoinAnalys
+            # coin_analysis_obj = CoinAnalys
             apiResponse = APIResponse(200,"Successfully Generated ",resp)
             response.status_code = apiResponse.httpCode
             return apiResponse
@@ -242,17 +243,29 @@ async def getConversationalData(body:LLMBody,response:Response):
 async def getCoinAnalysisData(body:CoinAnalysisBody,response:Response):
     try:
         # get current analysis
-        # analysis =await stack_analysis_coin_analysis()
-        analysis = getCoinCryptoAnalsysFunc(body.symbol,body.interval,body.llmModel)
-        apiResponse = APIResponse(200,"Successfully Generated ",analysis)
-        print(f"Current Analysis: {analysis}")
-        # if not analysis:
-        #     print("No analysis found")
-        #     resp =  generalCryptoAnalysisFull(body.llmModel)
-        #     await saveAnalysis(resp["data"],resp["sentiment"])
-        #     apiResponse = APIResponse(200,"Successfully Generated ",resp)
-        #     response.status_code = apiResponse.httpCode
-        #     return apiResponse
+        curr_analysis =await stack_analysis_coin_analysis(body.symbol,body.interval)
+        if not curr_analysis:
+            print("No analysis found")
+            analysis =  getCoinCryptoAnalsysFunc(body.symbol,body.interval,body.llmModel)
+            print(analysis)
+            # save analysis to db
+            await addAnalysis(CoinAnalysisBase(agent="BullBearBot",timeframe=body.timeframe,analysis_type="CoinMarketAnalysis",analysis=analysis["data"],sentiment=analysis["sentiment"],coin_symbol=body.symbol,interval=body.interval))
+            apiResponse = APIResponse(200,"Successfully Generated ",{"response": analysis})
+            return apiResponse
+        created_at = curr_analysis["created_at"]
+        created_at = created_at.replace(tzinfo=timezone.utc)
+        now = datetime.now(timezone.utc)
+        print(f"Created At: {created_at}")
+        time_difference = now - created_at
+        if time_difference > timedelta(days=1):
+            print("The document is older than 1 day.")
+            analysis =  getCoinCryptoAnalsysFunc(body.symbol,body.interval,body.llmModel)
+            print(analysis)
+            # save analysis to db
+            await addAnalysis(CoinAnalysisBase(agent="BullBearBot",timeframe=body.timeframe,analysis_type="CoinMarketAnalysis",analysis=analysis["data"],sentiment=analysis["sentiment"],coin_symbol=body.symbol,interval=body.interval))
+            apiResponse = APIResponse(200,"Successfully Generated ",{"response": analysis})
+            return apiResponse
+        apiResponse = APIResponse(200,"Successfully Generated ",{"response":{"data":curr_analysis["analysis"],"sentiment":curr_analysis["sentiment"]}})
         response.status_code = apiResponse.httpCode
         return apiResponse
 

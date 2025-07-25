@@ -5,7 +5,7 @@ from fastapi import FastAPI,Response,status
 from pydantic import BaseModel
 from .models.response import APIResponse
 from .llms.llmSelector import getLLMFromModelName
-from .routes import rag,ai,analysis,coinanalysis
+from .routes import rag,ai,analysis,coinanalysis,mobile,collection
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from .agents.reactAgent import get_agent_executor
@@ -94,3 +94,5 @@ app.include_router(rag.router)
 app.include_router(ai.router)
 app.include_router(analysis.router)
 app.include_router(coinanalysis.router)
+app.include_router(mobile.router)
+app.include_router(collection.router)
