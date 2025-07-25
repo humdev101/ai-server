@@ -2,7 +2,7 @@ from motor.motor_asyncio import AsyncIOMotorClient
 from bson import ObjectId
 import os
 
-MONGO_URL = os.getenv("MOBILE_MONGO_URL", "mongodb+srv://staging_db:StagingDB-1@cluster0.cnrsg44.mongodb.net/")
+MONGO_URL = os.getenv("MOBILE_MONGO_URL", "")
 client = AsyncIOMotorClient(MONGO_URL)
 db = client["devices"]
 collection = db["devicecollections"]
